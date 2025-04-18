@@ -1,0 +1,69 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/node:18.16
+    steps:
+      - checkout
+      
+      # Cache dependencies
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "package-lock.json" }}
+            - v1-deps-
+      
+      # Install backend dependencies
+      - run:
+          name: Install Backend Dependencies
+          command: npm install
+      
+      # Cache frontend dependencies
+      - restore_cache:
+          keys:
+            - v1-frontend-deps-{{ checksum "frontend/package-lock.json" }}
+            - v1-frontend-deps-
+      
+      # Install frontend dependencies
+      - run:
+          name: Install Frontend Dependencies
+          command: cd frontend && npm install
+      
+      # Save caches
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-deps-{{ checksum "package-lock.json" }}
+      
+      - save_cache:
+          paths:
+            - frontend/node_modules
+          key: v1-frontend-deps-{{ checksum "frontend/package-lock.json" }}
+      
+      # Run tests
+      - run:
+          name: Run Backend Tests
+          command: npm test
+      
+      - run:
+          name: Run Frontend Tests
+          command: cd frontend && npm test
+      
+      # Build frontend
+      - run:
+          name: Build Frontend
+          command: cd frontend && npm run build
+      
+      # Store build artifacts
+      - store_artifacts:
+          path: frontend/build
+          destination: build
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build-and-test 
