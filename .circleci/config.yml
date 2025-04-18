@@ -4,46 +4,25 @@ orbs:
   node: circleci/node@5.1.0
   slack: circleci/slack@4.12.0
 
-commands:
-  install-deps:
-    description: "Install dependencies"
-    steps:
-      - restore_cache:
-          keys:
-            - v1-deps-{{ checksum "package-lock.json" }}
-            - v1-deps-
-      - run:
-          name: Install Backend Dependencies
-          command: npm install
-      - restore_cache:
-          keys:
-            - v1-frontend-deps-{{ checksum "frontend/package-lock.json" }}
-            - v1-frontend-deps-
-      - run:
-          name: Install Frontend Dependencies
-          command: cd frontend && npm install
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-deps-{{ checksum "package-lock.json" }}
-      - save_cache:
-          paths:
-            - frontend/node_modules
-          key: v1-frontend-deps-{{ checksum "frontend/package-lock.json" }}
-
 jobs:
   test:
     docker:
       - image: cimg/node:18.16
     steps:
       - checkout
-      - install-deps
+      - node/install-packages:
+          pkg-manager: npm
       - run:
           name: Run Backend Tests
-          command: npm test
+          command: |
+            chmod +x node_modules/.bin/jest
+            npm test
       - run:
           name: Run Frontend Tests
-          command: cd frontend && npm test
+          command: |
+            cd frontend
+            npm install
+            npm test -- --watchAll=false
       - store_test_results:
           path: test-results
 
@@ -52,51 +31,17 @@ jobs:
       - image: cimg/node:18.16
     steps:
       - checkout
-      - install-deps
+      - node/install-packages:
+          pkg-manager: npm
       - run:
           name: Build Frontend
-          command: cd frontend && npm run build
+          command: |
+            cd frontend
+            npm install
+            npm run build
       - store_artifacts:
           path: frontend/build
           destination: build
-
-  deploy-staging:
-    docker:
-      - image: cimg/node:18.16
-    steps:
-      - checkout
-      - install-deps
-      - run:
-          name: Build Frontend
-          command: cd frontend && npm run build
-      - run:
-          name: Deploy to Staging
-          command: |
-            echo "Deploying to staging environment"
-            # Add your staging deployment commands here
-      - slack/notify:
-          event: pass
-          custom: |
-            Staging deployment successful! 🎉
-
-  deploy-production:
-    docker:
-      - image: cimg/node:18.16
-    steps:
-      - checkout
-      - install-deps
-      - run:
-          name: Build Frontend
-          command: cd frontend && npm run build
-      - run:
-          name: Deploy to Production
-          command: |
-            echo "Deploying to production environment"
-            # Add your production deployment commands here
-      - slack/notify:
-          event: pass
-          custom: |
-            Production deployment successful! 🚀
 
 workflows:
   version: 2
@@ -106,16 +51,3 @@ workflows:
       - build:
           requires:
             - test
-      - deploy-staging:
-          requires:
-            - build
-          filters:
-            branches:
-              only: develop
-      - deploy-production:
-          requires:
-            - deploy-staging
-          filters:
-            branches:
-              only: main
-          type: approval 
