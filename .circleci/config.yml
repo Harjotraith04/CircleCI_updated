@@ -59,36 +59,37 @@ jobs:
     steps:
       - checkout
       
-      # Install backend dependencies
+      # Set npm permissions
+      - run:
+          name: Set NPM Permissions
+          command: |
+            sudo chown -R $USER:$GROUP ~/.npm
+            sudo chown -R $USER:$GROUP .
+      
+      # Install dependencies
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
             - v1-dependencies-
+      
       - run:
-          name: Install Backend Dependencies
-          command: npm install
+          name: Install Dependencies
+          command: |
+            npm install
+            cd frontend && npm install && cd ..
+      
       - save_cache:
           paths:
             - node_modules
+            - frontend/node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
       
-      # Install frontend dependencies
-      - restore_cache:
-          keys:
-            - v1-frontend-deps-{{ checksum "frontend/package.json" }}
-            - v1-frontend-deps-
-      - run:
-          name: Install Frontend Dependencies
-          command: cd frontend && npm install
-      - save_cache:
-          paths:
-            - frontend/node_modules
-          key: v1-frontend-deps-{{ checksum "frontend/package.json" }}
-      
-      # Run tests
+      # Run tests with proper permissions
       - run:
           name: Run Tests
-          command: npm test
+          command: |
+            sudo npm install -g jest
+            npm test
       
       # Build frontend
       - run:
