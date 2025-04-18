@@ -35,23 +35,10 @@ This is a full-stack application with a React frontend and Node.js backend, inte
    npm run dev
    ```
 
-The frontend will be available at `http://localhost:3000` and the backend at `http://localhost:5000`.
+The frontend will be available at `http://localhost:3005` and the backend at `http://localhost:5000`.
 
-## CircleCI Integration
+## CircleCI Status
 
-This project is configured with CircleCI for continuous integration. The pipeline will:
-1. Install dependencies
-2. Run tests
-3. Build the frontend application
+[![CircleCI](https://circleci.com/gh/<your-username>/CircleCI_updated_new.svg?style=svg)](https://circleci.com/gh/<your-username>/CircleCI_updated_new)
 
-To set up CircleCI:
-1. Create an account on [CircleCI](https://circleci.com)
-2. Connect your GitHub repository
-3. The pipeline will automatically run on every push to the main branch
-
-## Available Scripts
-
-- `npm start` - Start the backend server
-- `npm run dev` - Start both frontend and backend in development mode
-- `npm test` - Run tests
-- `npm run install-all` - Install dependencies for both frontend and backend 
+Last updated: [Current Timestamp]
